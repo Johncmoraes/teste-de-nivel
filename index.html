@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Level Test — V3</title>
+<style>
+:root{--blue:#1769e0;--dark:#0d47a1;--ink:#172033;--muted:#667085;--line:#e5e9f0}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf5ff,#f8fbff);color:var(--ink)}
+.container{max-width:900px;margin:auto;padding:28px 18px 60px}
+.hero{text-align:center;padding:25px 10px 18px}
+.hero h1{font-size:clamp(30px,5vw,46px);margin:0 0 10px}
+.hero p{max-width:700px;margin:auto;color:var(--muted);line-height:1.6}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 12px 35px rgba(20,40,80,.08);padding:26px}
+.badge{display:inline-block;background:#eaf2ff;color:var(--dark);font-weight:800;padding:7px 11px;border-radius:999px;font-size:13px;margin-bottom:12px}
+h2{margin:0 0 14px}h3{margin:0 0 10px}
+.instructions{background:#f7f9fc;border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:20px 0}
+.instructions ul{margin:10px 0 0;padding-left:22px;line-height:1.8}
+.note{font-size:13px;color:var(--muted);line-height:1.55}
+.actions{display:flex;justify-content:flex-end;margin-top:22px}
+button,.whatsapp{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer;font-size:15px}
+.primary{background:var(--blue);color:#fff}.primary:disabled{opacity:.45;cursor:not-allowed}
+.progress{height:9px;background:#e9eef5;border-radius:999px;overflow:hidden;margin:18px 0 8px}
+.bar{height:100%;background:linear-gradient(90deg,#1769e0,#52a0ff);width:0;transition:.2s}
+.progressText{font-size:13px;color:var(--muted)}
+.levelTag{font-size:12px;font-weight:800;color:var(--dark);text-transform:uppercase;letter-spacing:.08em}
+.q{font-size:21px;font-weight:750;line-height:1.45;margin:25px 0 18px}
+.option{display:block;width:100%;text-align:left;background:#fff;border:1px solid #dbe1ea;border-radius:13px;padding:15px 16px;margin:10px 0;cursor:pointer;font-size:16px}
+.option.selected{border-color:var(--blue);background:#edf5ff;box-shadow:0 0 0 2px rgba(23,105,224,.1)}
+.hidden{display:none}
+.result{text-align:center}.level{font-size:54px;font-weight:900;color:var(--blue)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:22px 0}
+.stat{background:#f7f9fc;border:1px solid var(--line);border-radius:14px;padding:15px}
+.stat strong{display:block;font-size:23px}.stat span{font-size:13px;color:var(--muted)}
+.levelGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:16px 0}
+.levelBox{padding:12px 5px;text-align:center;background:#f7f9fc;border:1px solid var(--line);border-radius:12px}
+.levelBox strong{display:block}.levelBox span{font-size:12px;color:var(--muted)}
+.breakdown{text-align:left;margin-top:28px}
+.wrong{border:1px solid #f0d1d1;background:#fffafa;border-radius:14px;padding:16px;margin:12px 0}
+.wrong .label{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}
+.wrong p{margin:7px 0;line-height:1.5}.your{color:#c62828}.correct{color:#14804a}
+.cta{margin-top:30px;padding:24px;border-radius:18px;background:linear-gradient(135deg,#eef5ff,#f8fbff);border:1px solid #dbe8fb;text-align:center}
+.cta p{color:var(--muted);line-height:1.6}.cta strong{display:block;font-size:18px;margin:8px 0 18px}
+.whatsapp{background:#1f9d55;color:#fff;text-decoration:none;display:inline-block}
+@media(max-width:650px){.card{padding:20px}.stats{grid-template-columns:1fr}.levelGrid{grid-template-columns:repeat(3,1fr)}.q{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header class="hero">
+<div class="badge">CEFR Placement Test</div>
+<h1>What's your English level?</h1>
+<p>Answer a series of questions that gradually move from basic to advanced English. Your result is an initial placement estimate — not an official certificate.</p>
+</header>
+
+<section id="start" class="card">
+<h2>Before you start</h2>
+<div class="instructions"><ul>
+<li>Don't use a translator.</li>
+<li>Choose the answer that feels most natural.</li>
+<li>Take your time.</li>
+<li>There is no passing or failing.</li>
+</ul></div>
+<p class="note">The test contains 36 questions across CEFR levels A1 to C2. Each new session selects a different set from the question bank.</p>
+<div class="actions"><button class="primary" id="startBtn">Start the test</button></div>
+</section>
+
+<section id="test" class="card hidden">
+<div class="levelTag" id="levelTag"></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="progressText" id="progressText"></div>
+<div class="q" id="question"></div>
+<div id="options"></div>
+<div class="actions"><button class="primary" id="nextBtn" disabled>Next</button></div>
+</section>
+
+<section id="results" class="card hidden">
+<div class="result">
+<div class="badge">Your result</div>
+<h2>Estimated English level</h2>
+<div class="level" id="resultLevel"></div>
+<p id="resultDescription"></p>
+<div class="stats">
+<div class="stat"><strong id="score"></strong><span>Overall score</span></div>
+<div class="stat"><strong id="accuracy"></strong><span>Overall accuracy</span></div>
+</div>
+</div>
+
+<h3>Performance by level</h3>
+<div class="levelGrid" id="levelGrid"></div>
+
+<div class="breakdown">
+<h3>Answer Breakdown</h3>
+<p class="note">Only the questions you answered incorrectly are shown below.</p>
+<div id="wrongList"></div>
+</div>
+
+<div class="cta">
+<h2>Quer ir um passo além?</h2>
+<p>Este teste oferece uma estimativa inicial do seu nível de inglês — mas sua capacidade vai muito além de gramática e vocabulário.</p>
+<strong>Descubra como você realmente se comunica em inglês.</strong>
+<a id="whatsappBtn" class="whatsapp" href="#" target="_blank" rel="noopener">Falar comigo</a>
+</div>
+</section>
+</div>
+
+<script>
+/*
+  V3
+  - 108 questions in the bank
+  - 36 questions per session (6 per CEFR level)
+  - random questions and options
+  - no retake button
+  - answer breakdown
+  - WhatsApp CTA
+
+  IMPORTANT:
+  Put your WhatsApp number below using country code.
+  Example for Brazil: 5511999999999
+*/
+const whatsappNumber = "5511982118272";
+
+
+const LEVELS = ["A1","A2","B1","B2","C1","C2"];
+
+const BANK = {
+A1: [
+["My name ___ John.","is"],["Where ___ you from?","are"],["She ___ two brothers.","has"],
+["I usually ___ coffee in the morning.","drink"],["What is the opposite of “big”?","small"],
+["There ___ a supermarket near my house.","is"],["I ___ a teacher.","am"],["They ___ at home now.","are"],
+["How ___ you today?","are"],["He ___ football every Saturday.","plays"],["I have ___ apple.","an"],
+["___ you like pizza?","Do"],["My sister is ___ years old.","twenty"],["We ___ from Brazil.","are"],
+["Can you ___ me?","help"],["I get up ___ seven o’clock.","at"],["This is ___ book.","my"],
+["There are two ___ on the table.","chairs"]
+],
+A2: [
+["I ___ to New York last year.","went"],["She’s ___ than her sister.","taller"],["We’ve lived here ___ 2022.","since"],
+["Would you like ___ coffee?","some"],["I’m going to call you when I ___ home.","arrive"],
+["How was your weekend?","It was great, thanks."],["He ___ his homework before dinner yesterday.","finished"],
+["There isn’t ___ milk in the fridge.","much"],["I’ve never ___ sushi.","tried"],["You ___ wear a seat belt in a car.","have to"],
+["If it rains, we ___ at home.","will stay"],["She’s interested ___ photography.","in"],
+["Could you tell me ___ the station is?","where"],["I’m not as tall ___ my brother.","as"],
+["They have been married ___ ten years.","for"],["I forgot ___ the door.","to lock"],
+["This bag is ___ expensive for me.","too"],["What ___ you doing when I called?","were"]
+],
+B1: [
+["If I had more free time, I ___ another language.","would learn"],["I’ve been working here ___ five years.","for"],
+["The meeting was cancelled, ___ was disappointing.","which"],["I’m not used to ___ so early.","waking up"],
+["I ran into an old friend yesterday. “Ran into” means:","met unexpectedly"],
+["By the time we arrived, the movie ___.","had started"],["She suggested ___ earlier.","leaving"],
+["I wish I ___ more time yesterday.","had had"],["We need to ___ a decision soon.","make"],
+["He apologized ___ being late.","for"],["I’m looking forward to ___ you.","seeing"],
+["The company has ___ a new policy.","introduced"],["I would rather ___ at home tonight.","stay"],
+["She asked me if I ___ the report.","had finished"],["Despite ___ tired, he continued working.","being"],
+["The instructions were so unclear that I couldn’t ___ them.","figure out"],
+["I’ve known her ___ we were at school.","since"],["He used to ___ here before moving abroad.","live"]
+],
+B2: [
+["Hardly ___ the presentation when the fire alarm went off.","had I started"],
+["The company is expected ___ its revenue this year.","to increase"],
+["I wish I ___ more carefully before making that decision.","had thought"],
+["Which sentence is most appropriate in a formal email?","Could you please send me the file at your earliest convenience?"],
+["Despite ___ exhausted, she finished the report.","being"],["The proposal was turned down. This means it was:","rejected"],
+["Not only ___ late, but he also forgot the documents.","was he"],["The new policy is likely to ___ significant changes.","bring about"],
+["Had I known about the delay, I ___ earlier.","would have left"],
+["The manager insisted that the report ___ by Friday.","be completed"],
+["Her explanation was somewhat ___, so I asked for clarification.","vague"],
+["The project was completed ___ schedule.","ahead of"],["I’d rather you ___ that issue with him directly.","discussed"],
+["He denied ___ the information to the press.","leaking"],["The results were consistent ___ our expectations.","with"],
+["We need to take these factors ___ account.","into"],["The article raises an important issue, but it fails to ___ it adequately.","address"],
+["Her comments were interpreted as a criticism, although that may not have been her ___.","intention"]
+],
+C1: [
+["Were it not for your help, we ___ the deadline.","wouldn’t have met"],
+["The report, ___ was published last week, has attracted criticism.","which"],
+["Because the instructions were convoluted, I struggled to ___ what he meant.","make out"],
+["The policy is intended to ___ the negative impact of the change.","mitigate"],
+["Not only ___ the proposal, but she also defended it convincingly.","did she present"],
+["The issue has been blown out of proportion. This means it has been:","made to seem more serious than it really is"],
+["His argument is difficult to ___ because several assumptions are unstated.","substantiate"],
+["The findings seem to ___ the assumption that demand will remain stable.","undermine"],
+["She was reluctant to ___ the implications of the decision.","acknowledge"],
+["The proposal was rejected on the grounds that it was financially ___.","unviable"],
+["He spoke with such conviction that his account was difficult to ___.","dispute"],
+["The new evidence lends ___ to the theory.","credence"],
+["The company is seeking to ___ its position in the market.","consolidate"],
+["His response was deliberately ___, leaving room for interpretation.","ambiguous"],
+["The report provides a ___ analysis of the issue.","comprehensive"],
+["We need to distinguish ___ correlation and causation.","between"],
+["The decision was made ___ consultation with the relevant departments.","following"],
+["Her account was broadly consistent with the evidence, ___ a few minor discrepancies.","notwithstanding"]
+],
+C2: [
+["The argument is ___ convincing, but it overlooks a crucial distinction.","ostensibly"],
+["His remarks were deliberately ___.","ambiguous"],
+["Much as I ___ the rationale, I remain unconvinced by the conclusion.","appreciate"],
+["The findings do not ___ the conclusion that the policy was effective.","warrant"],
+["His account was riddled with inconsistencies. This means it:","contained many contradictions"],
+["Far from ___ the problem, the measure may have exacerbated it.","alleviating"],
+["The distinction is subtle but by no means ___.","negligible"],
+["Her explanation was sufficiently ___ to withstand scrutiny.","cogent"],
+["The minister sought to ___ concerns about the proposed reforms.","allay"],
+["The proposal is predicated ___ the assumption that demand will rise.","on"],
+["His criticism was not so much hostile as ___.","dismissive"],
+["The evidence is, at best, ___.","inconclusive"],
+["The report calls into ___ the reliability of the original data.","question"],
+["The wording was carefully chosen to ___ any suggestion of liability.","preclude"],
+["The decision was met with a degree of skepticism that was hardly ___.","surprising"],
+["The findings are broadly compatible with the hypothesis, albeit with certain ___.","qualifications"],
+["He gave a ___ account of events, avoiding any explicit attribution of blame.","circumspect"],
+["The policy may prove effective, ___ the extent to which it is properly implemented.","depending on"]
+]
+};
+
+let session = [];
+let current = 0;
+let answers = [];
+
+function shuffle(array) {
+  const a = [...array];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildSession() {
+  session = [];
+
+  LEVELS.forEach(level => {
+    const source = BANK[level].map(item => ({
+      level,
+      question: item[0],
+      answer: item[1]
+    }));
+
+    shuffle(source).slice(0, 6).forEach(item => {
+      const distractors = shuffle(
+        source
+          .filter(x => x.answer !== item.answer)
+          .map(x => x.answer)
+      ).slice(0, 3);
+
+      session.push({
+        ...item,
+        options: shuffle([item.answer, ...distractors])
+      });
+    });
+  });
+}
+
+function show(id) {
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function hide(id) {
+  document.getElementById(id).classList.add("hidden");
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[char]));
+}
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  buildSession();
+  current = 0;
+  answers = [];
+  hide("start");
+  show("test");
+  renderQuestion();
+});
+
+function renderQuestion() {
+  const q = session[current];
+
+  document.getElementById("levelTag").textContent = q.level;
+  document.getElementById("progressText").textContent = `Question ${current + 1} of 36`;
+  document.getElementById("bar").style.width = `${((current + 1) / 36) * 100}%`;
+  document.getElementById("question").textContent = q.question;
+
+  const optionsBox = document.getElementById("options");
+  optionsBox.innerHTML = "";
+
+  const nextButton = document.getElementById("nextBtn");
+  nextButton.disabled = true;
+
+  q.options.forEach(option => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "option";
+    button.textContent = option;
+
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".option").forEach(x => x.classList.remove("selected"));
+      button.classList.add("selected");
+      answers[current] = option;
+      nextButton.disabled = false;
+    });
+
+    optionsBox.appendChild(button);
+  });
+
+  nextButton.textContent = current === 35 ? "See my result" : "Next";
+}
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  current++;
+  if (current < 36) {
+    renderQuestion();
+  } else {
+    finishTest();
+  }
+});
+
+function finishTest() {
+  hide("test");
+  show("results");
+
+  let score = 0;
+  const performance = {};
+  LEVELS.forEach(level => performance[level] = 0);
+
+  session.forEach((q, index) => {
+    if (answers[index] === q.answer) {
+      score++;
+      performance[q.level]++;
+    }
+  });
+
+  let estimated = "A1";
+  LEVELS.forEach(level => {
+    if (performance[level] >= 4) estimated = level;
+  });
+
+  const descriptions = {
+    A1: "You have a basic foundation for simple everyday English.",
+    A2: "You can handle familiar everyday situations with growing confidence.",
+    B1: "You can communicate about familiar topics and experiences with a useful range of English.",
+    B2: "You can handle more complex language, arguments and formal situations with increasing precision.",
+    C1: "You can use complex English with flexibility, nuance and a broad range of vocabulary and structures.",
+    C2: "You demonstrate very advanced control, including precision, idiomatic language and subtle differences in meaning."
+  };
+
+  document.getElementById("resultLevel").textContent = estimated;
+  document.getElementById("resultDescription").textContent = descriptions[estimated];
+  document.getElementById("score").textContent = `${score}/36`;
+  document.getElementById("accuracy").textContent = `${Math.round(score / 36 * 100)}%`;
+
+  document.getElementById("levelGrid").innerHTML = LEVELS.map(level =>
+    `<div class="levelBox"><strong>${level}</strong><span>${performance[level]}/6</span></div>`
+  ).join("");
+
+  const wrong = session
+    .map((q, index) => ({ q, index }))
+    .filter(item => answers[item.index] !== item.q.answer);
+
+  const wrongList = document.getElementById("wrongList");
+
+  if (wrong.length === 0) {
+    wrongList.innerHTML = `
+      <div class="wrong" style="background:#f5fff9;border-color:#cdebd9">
+        <p class="correct"><strong>Excellent! You answered every question correctly.</strong></p>
+      </div>`;
+  } else {
+    wrongList.innerHTML = wrong.map(item => `
+      <div class="wrong">
+        <div class="label">Question ${item.index + 1} · ${item.q.level}</div>
+        <p><strong>${escapeHTML(item.q.question)}</strong></p>
+        <p class="your"><strong>Your answer:</strong> ${escapeHTML(answers[item.index] || "No answer")}</p>
+        <p class="correct"><strong>Correct answer:</strong> ${escapeHTML(item.q.answer)}</p>
+      </div>
+    `).join("");
+  }
+
+  const whatsappButton = document.getElementById("whatsappBtn");
+  const whatsappMessage = `Olá! Acabei de fazer o teste de nível de inglês.
+
+Meu resultado foi: ${estimated} — ${score}/36 (${Math.round(score / 36 * 100)}% de acertos).
+
+Gostaria de saber mais sobre minha avaliação.`;
+
+  if (whatsappNumber.trim()) {
+    const number = whatsappNumber.replace(/\D/g, "");
+    whatsappButton.href =
+      `https://wa.me/${number}?text=${encodeURIComponent(whatsappMessage)}`;
+  } else {
+    whatsappButton.addEventListener("click", event => {
+      event.preventDefault();
+      alert("Add your WhatsApp number in the whatsappNumber variable at the top of the HTML file.");
+    });
+  }
+
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+</script>
+</body>
+</html>
